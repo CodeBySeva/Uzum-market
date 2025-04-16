@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style.css">
+  <title>Корзина товаров</title>
+</head>
+
+<body>
+  <section class="header container"></section>
+
+  <section class="shoppingCart-section container">
+    <div class="title-text">
+      <h2>Корзина товаров</h2>
+    </div>
+
+    <div class="shoppingCart">
+      <div class="main"></div>
+
+      <div class="summary-box">
+        <h2 id="total-amount"></h2>
+
+        <div class="summary">
+          <p>Итого товаров: <span id="totalItems"></span></p>
+          <p>Итого скидки: <span id="totalDiscount"></span> сум</p>
+        </div>
+
+        <button>Оформить</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="active">
+    <div class="shoppingCartItems container">
+      <img src="/src/images/shopocat.svg" alt="Сердечки" class="hearts-img">
+      <h1>В корзине пока нет товаров</h1>
+      <p>Начните с подборок на главной странице или найдите нужный товар через поиск</p>
+    </div>
+  </section>
+
+  <script type="module" src="./script.js"></script>
+</body>
+
+</html>
