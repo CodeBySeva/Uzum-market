@@ -1,0 +1,121 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.request {
+    display: flex;
+    justify-content: center;
+}
+
+.registration-container,
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border-radius: 10px;
+    padding-top: 200px;
+    text-align: center;
+    width: 438px;
+    height: 463px;
+
+    h2 {
+        font-size: 48px;
+        line-height: 59.42px;
+        margin-bottom: 38px;
+    }
+
+    form input {
+        width: 100%;
+        height: 56px;
+        padding: 25px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+    }
+
+    button {
+        width: 100%;
+        height: 56px;
+        padding: 10px;
+        background-color: blue;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 32px;
+    }
+
+    button:hover {
+        background-color: darkblue;
+    }
+
+    a:hover {
+        color: darkblue;
+    }
+
+    a {
+        text-decoration: none;
+        color: rgba(0, 71, 255, 1);
+    }
+
+    .required.valid {
+        border-color: rgba(66, 0, 255, 1);
+    }
+
+    .required.invalid {
+        border-color: #e74c3c;
+    }
+
+    .required:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 71, 255, 1);
+    }
+
+    .required {
+        transition: border-color 0.3s ease-in-out;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .registration-container,
+    .login-container {
+        width: 100%;
+        height: auto;
+        padding: 50% 20px;
+        border-radius: 0;
+        box-shadow: none;
+
+        h2 {
+            font-size: 28px;
+            line-height: 36px;
+            margin-bottom: 20px;
+        }
+
+        form input {
+            height: 48px;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        button {
+            height: 48px;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+    }
+
+    .request {
+        padding: 0 10px;
+    }
+}

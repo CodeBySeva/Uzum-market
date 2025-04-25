@@ -1,6 +1,10 @@
-import { header } from "../../Components/header";
+import { createCategoriesSection } from "../../Components/categories";
+import { createSearchElement } from "../../Components/search";
 import { createProductCardElemnt } from "../../Components/productCard";
+import { header } from "../../Components/header";
+import { getData } from "../../libs/api";
 
+createCategoriesSection();
 header();
 
 const liked = JSON.parse(localStorage.getItem("likedProducts")) || [];
@@ -20,3 +24,16 @@ if (liked.length === 0) {
         document.querySelector('.wish-list-container').appendChild(card);
     });
 };
+
+const getpoductData = getData(`goods/`);
+
+getpoductData.then((res) => {
+    if (res && res.data) {
+        const allProducts = res.data;
+
+        createSearchElement(allProducts);
+    } else {
+        console.error("Нет данных для отображения");
+    }
+})
+    .catch((error) => console.error(error));

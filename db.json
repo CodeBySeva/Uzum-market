@@ -942,5 +942,67 @@
       ],
       "type": "kitchen"
     }
+  ],
+  "users": [
+    {
+      "id": "1234",
+      "email": "sevariik@gmail.com",
+      "lastname": "Seva",
+      "surname": "Me",
+      "password": "55555",
+      "token": "9DelDw9vMHmn3hkK"
+    },
+    {
+      "id": "8639",
+      "email": "alexadams@google.com",
+      "lastname": "alex",
+      "surname": "test",
+      "password": "1212",
+      "token": "VKGqz8CGDxHvx6xL"
+    },
+    {
+      "id": "2111",
+      "email": "aaaa@test.com",
+      "lastname": "aaa",
+      "surname": "aaaaa",
+      "password": "33333",
+      "token": "CXS3CxJx7hBz9Bzz"
+    }
+  ],
+  "cart": [
+    {
+      "id": 1,
+      "userId": "1234",
+      "products": [
+        {
+          "id": 1,
+          "quantity": 2
+        },
+        {
+          "id": 2,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "userId": "8639",
+      "products": []
+    }
+  ],
+  "favorites": [
+    {
+      "id": 1,
+      "userId": "1234",
+      "products": [
+        { "id": 1 },
+        { "id": 2 }
+      ]
+    },
+    {
+      "id": 2,
+      "userId": "8639",
+      "products": []
+    }
   ]
 }

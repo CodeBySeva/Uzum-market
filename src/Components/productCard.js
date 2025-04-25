@@ -99,13 +99,12 @@ export function createProductCardElemnt(data) {
         localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
     };
 
-    cartIcon.onclick = (event) => {
+    cartIcon.onclick = async (event) => {
         event.stopPropagation();
-
+    
         let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
-
         const isInCart = cartProducts.some(product => product.id === data.id);
-
+    
         if (!isInCart) {
             cartProducts.push({ ...data, quantity: 1 });
             alert("Товар добавлен в корзину!");
@@ -117,8 +116,29 @@ export function createProductCardElemnt(data) {
                 return product;
             });
         }
-
+    
         localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+    
+        if (userId) {
+            try {
+                const cartRes = await getData("cart");
+                const userCart = cartRes.data.find(cart => cart.userId === userId);
+    
+                if (userCart) {
+                    await patchData(`cart/${userCart.id}`, {
+                        ...userCart,
+                        products: cartProducts
+                    });
+                } else {
+                    await postData("cart", {
+                        userId,
+                        products: cartProducts
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
     };
 
     productCard.appendChild(productImg);

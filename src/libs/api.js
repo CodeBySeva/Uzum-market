@@ -21,3 +21,13 @@ export async function postData(endpoint, body) {
         throw error;
     };
 };
+
+export async function patchData(endpoint, body) {
+    try {
+        let response = await axios.patch(`${baseUrl}/${endpoint}`, body);
+       
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};

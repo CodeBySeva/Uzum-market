@@ -1,8 +1,11 @@
+import { createCategoriesSection } from "../../Components/categories";
+import { createSearchElement } from "../../Components/search";
 import { header } from "../../Components/header";
 import { getData } from "../../libs/api";
 import { render } from "../../libs/utils";
 import { createProductCardElemnt } from "../../Components/productCard";
 
+createCategoriesSection();
 header();
 
 const similarProductBox = document.querySelector(".similar-products-box");
@@ -20,13 +23,17 @@ Promise.all([getpoductData, getAllProducts])
         const allProducts = similarProduct.data;
         const currentData = currentProduct.data;
 
+        createSearchElement(allProducts);
+
         const similarProducts = allProducts.filter(
             (item) => item.type === currentData.type && item.id != currentData.id
         );
 
         render(similarProducts.slice(0, 5), similarProductBox, createProductCardElemnt);
+        updateLikedBtnText();
     })
     .catch(error => console.error(error))
+
 
 const likedBtn = document.querySelector("#likedBtn");
 
@@ -46,6 +53,19 @@ likedBtn.onclick = () => {
     }
 
     localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
+    updateLikedBtnText();
+};
+
+function updateLikedBtnText() {
+    const likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
+    const isLiked = likedProducts.some(product => product.id === currentProductData?.id);
+
+    likedBtn.textContent = isLiked ? "В избранном" : "Добавить в избранное";
+    likedBtn.classList.toggle("active", isLiked);
+}
+
+window.onload = () => {
+    updateLikedBtnText();
 };
 
 
@@ -57,7 +77,6 @@ function productElements(data) {
     priceOld.textContent = `${data.price.toLocaleString("ru-RU")} сум`;
 
     const discountedPrice = Math.round(data.price - (data.price * data.salePercentage / 100));
-
     const priceNew = document.querySelector(".price-new");
     priceNew.textContent = `${discountedPrice.toLocaleString("ru-RU")} сум`;
 
@@ -66,7 +85,6 @@ function productElements(data) {
 
     const description = document.querySelector("#description");
     description.textContent = data.description ? data.description : "Описание товара отсуствует";
-
 
     const mediaData = data.media || [];
     const mediaArray = [].concat(mediaData);
@@ -77,10 +95,8 @@ function productElements(data) {
     const rating = document.querySelector("#rating");
     rating.textContent = data.rating;
 
-
     if (mediaArray.length > 0) {
         mainSlider.src = mediaArray[0];
-
         thumbnailsContainer.innerHTML = "";
 
         mediaArray.forEach((src, index) => {
@@ -114,14 +130,27 @@ function productElements(data) {
         mainSlider.src = "";
     }
 
-    // const swiper = new Swiper(".mySwiper", {
-    //     navigation: {
-    //         nextEl: ".custom-button-next",
-    //         prevEl: ".custom-button-prev",
-    //     },
-    // });
+    const cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+    const inCart = cartProducts.some(product => product.id === data.id);
 
-};
+    const addToCartBtn = document.querySelector(".btn.primary");
+    if (inCart) {
+        addToCartBtn.textContent = "В корзине";
+    } else {
+        addToCartBtn.textContent = "Добавить в корзину";
+    }
+
+    const existingProduct = cartProducts.find(product => product.id === data.id);
+    if (existingProduct) {
+        quantity = existingProduct.quantity || 1;
+    } else {
+        quantity = 1;
+    }
+    quantityDisplay.textContent = quantity;
+
+    updateLikedBtnText();
+}
+
 
 const quantityDisplay = document.querySelector("#quantity");
 const incrementBtn = document.querySelector("#increment");
@@ -149,13 +178,28 @@ addToCartBtn.onclick = () => {
 
     let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
 
-    const existing = cartProducts.find(p => p.id === currentProductData.id);
-    if (existing) {
-        existing.quantity += quantity;
+    const existingProduct = cartProducts.find(product => product.id === currentProductData.id);
+
+    if (existingProduct) {
+        cartProducts = cartProducts.filter(product => product.id !== currentProductData.id);
+        addToCartBtn.textContent = "Добавить в корзину";
+        quantity = 1;
+        quantityDisplay.textContent = quantity;
     } else {
         cartProducts.push({ ...currentProductData, quantity });
-    };
+        addToCartBtn.textContent = "В корзине";
+    }
 
     localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
-    alert("Товар добавлен в корзину!");
+};
+
+
+const titleText = document.querySelector(".title-text h2");
+
+titleText.style.cursor = "pointer";
+titleText.onclick = () => {
+    if (!currentProductData) return;
+
+    const type = currentProductData.type;
+    window.location.href = `/src/pages/categories/?type=${encodeURIComponent(type)}`;
 };

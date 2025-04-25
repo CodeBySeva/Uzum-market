@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>Категории товаров</title>
+</head>
+
+<body>
+    <section class="header container"></section>
+
+    <section class="categories-overlay"></section>
+
+    <section class="search-overlay"></section>
+
+    <section class="main-category-section container">
+        <section class="product-filters">
+            <div class="filter-block">
+                <h3>Цена, сум</h3>
+                <div class="price-range">
+                    <input type="text" placeholder="от 160" id="from"/>
+                    <input type="text" placeholder="до 35411100" id="to"/>
+                </div>
+            </div>
+
+            <div class="filter-block">
+                <h3>Цвет</h3>
+                <div class="color-list"></div>
+            </div>
+        </section>
+
+        <section class="products-container">
+            <div class="goods_box">
+                <div class="products"></div>
+            </div>
+        </section>
+    </section>
+
+    <script type="module" src="./script.js"></script>
+</body>
+
+</html>
