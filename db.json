@@ -945,7 +945,7 @@
   ],
   "users": [
     {
-      "id": "1234",
+      "id": 1234,
       "email": "sevariik@gmail.com",
       "lastname": "Seva",
       "surname": "Me",
@@ -953,7 +953,7 @@
       "token": "9DelDw9vMHmn3hkK"
     },
     {
-      "id": "8639",
+      "id": 8639,
       "email": "alexadams@google.com",
       "lastname": "alex",
       "surname": "test",
@@ -961,7 +961,7 @@
       "token": "VKGqz8CGDxHvx6xL"
     },
     {
-      "id": "2111",
+      "id": 2111,
       "email": "aaaa@test.com",
       "lastname": "aaa",
       "surname": "aaaaa",
@@ -972,7 +972,7 @@
   "cart": [
     {
       "id": 1,
-      "userId": "1234",
+      "userId": 1234,
       "products": [
         {
           "id": 1,
@@ -986,14 +986,14 @@
     },
     {
       "id": 2,
-      "userId": "8639",
+      "userId": 8639,
       "products": []
     }
   ],
   "favorites": [
     {
       "id": 1,
-      "userId": "1234",
+      "userId": 1234,
       "products": [
         { "id": 1 },
         { "id": 2 }
@@ -1001,7 +1001,7 @@
     },
     {
       "id": 2,
-      "userId": "8639",
+      "userId": 8639,
       "products": []
     }
   ]

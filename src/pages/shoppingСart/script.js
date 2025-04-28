@@ -70,7 +70,7 @@ function renderCartItems() {
         console.log("All goods data:", allGoods);
 
         cartProducts.forEach(cartItem => {
-            const cartItemId = Number(cartItem.id);
+            const cartItemId = cartItem.id;
             console.log("Cart item ID:", cartItemId); 
 
             const fullProductData = allGoods.find(product => product.id === cartItemId);
