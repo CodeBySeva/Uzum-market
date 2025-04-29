@@ -3,7 +3,7 @@ import { createSearchElement } from "../../Components/search";
 import { header } from "../../Components/header";
 import { getData } from "../../libs/api";
 import { render } from "../../libs/utils";
-import { createProductCardElemnt } from "../../Components/productCard";
+import { createProductCardElement } from "../../Components/productCard";
 
 createCategoriesSection();
 header();
@@ -29,7 +29,7 @@ Promise.all([getpoductData, getAllProducts])
             (item) => item.type === currentData.type && item.id != currentData.id
         );
 
-        render(similarProducts.slice(0, 5), similarProductBox, createProductCardElemnt);
+        render(similarProducts.slice(0, 5), similarProductBox, createProductCardElement);
         updateLikedBtnText();
     })
     .catch(error => console.error(error))

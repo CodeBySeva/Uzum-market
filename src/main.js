@@ -3,7 +3,7 @@ import { createSearchElement } from "./Components/search";
 import { header } from "./Components/header";
 import { render } from "./libs/utils";
 import { getData } from "./libs/api";
-import { createProductCardElemnt } from "./Components/productCard";
+import { createProductCardElement } from "./Components/productCard";
 import { appendRender } from "./libs/utils";
 
 createCategoriesSection();
@@ -66,14 +66,14 @@ Promise.all([getpoductData])
         const pcProducts = allProducts.filter((item) => item.type === "PC");
         const furnitureProducts = allProducts.filter((item) => item.type === "furniture");
 
-        render(tvProducts.slice(0, 5), tvBox, createProductCardElemnt);
-        render(audioProducts.slice(0, 5), audioBox, createProductCardElemnt);
-        render(kitchenProducts.slice(0, 5), kitchenBox, createProductCardElemnt);
-        render(pcProducts.slice(0, 5), PCbox, createProductCardElemnt);
+        render(tvProducts.slice(0, 5), tvBox, createProductCardElement);
+        render(audioProducts.slice(0, 5), audioBox, createProductCardElement);
+        render(kitchenProducts.slice(0, 5), kitchenBox, createProductCardElement);
+        render(pcProducts.slice(0, 5), PCbox, createProductCardElement);
 
         let furnitureRendered = 10;
         let isExpanded = false;
-        render(furnitureProducts.slice(0, furnitureRendered), furnitureBox, createProductCardElemnt);
+        render(furnitureProducts.slice(0, furnitureRendered), furnitureBox, createProductCardElement);
 
         const showMoreBtn = document.querySelector('.show-more');
 
@@ -84,7 +84,7 @@ Promise.all([getpoductData])
 
                 if (toShow > 0) {
                     const nextProducts = furnitureProducts.slice(furnitureRendered, furnitureRendered + toShow);
-                    appendRender(nextProducts, furnitureBox, createProductCardElemnt);
+                    appendRender(nextProducts, furnitureBox, createProductCardElement);
                     furnitureRendered += toShow;
 
                     if (furnitureRendered >= furnitureProducts.length) {
@@ -96,7 +96,7 @@ Promise.all([getpoductData])
                 }
             } else {
                 furnitureBox.innerHTML = '';
-                render(furnitureProducts.slice(0, 10), furnitureBox, createProductCardElemnt);
+                render(furnitureProducts.slice(0, 10), furnitureBox, createProductCardElement);
                 furnitureRendered = 10;
                 showMoreBtn.textContent = 'Показать еще 10';
                 isExpanded = false;

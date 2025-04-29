@@ -44,7 +44,7 @@ async function loadCartData() {
     if (userId) {
         try {
             const res = await getData("cart");
-            const userCart = res.data.find(c => c.userId === userId);
+            const userCart = res.data.find(c => +c.userId === +userId);
             cartProducts = userCart?.products || [];
         } catch (err) {
             console.error("Ошибка загрузки корзины пользователя", err);
@@ -73,7 +73,7 @@ function renderCartItems() {
             const cartItemId = cartItem.id;
             console.log("Cart item ID:", cartItemId); 
 
-            const fullProductData = allGoods.find(product => product.id === cartItemId);
+            const fullProductData = allGoods.find(product => +product.id === +cartItemId);
             if (fullProductData) {
                 const productData = {
                     ...fullProductData,

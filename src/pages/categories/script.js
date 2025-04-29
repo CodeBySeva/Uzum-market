@@ -1,7 +1,7 @@
 import { getData } from "../../libs/api";
 import { createCategoriesSection } from "../../Components/categories";
 import { createSearchElement } from "../../Components/search";
-import { createProductCardElemnt } from "../../Components/productCard";
+import { createProductCardElement } from "../../Components/productCard";
 import { render } from "../../libs/utils";
 import { header } from "../../Components/header";
 
@@ -28,7 +28,7 @@ function filterProductsByPrice() {
     });
 
     cardsWrapper.innerHTML = "";
-    render(filtered, cardsWrapper, createProductCardElemnt);
+    render(filtered, cardsWrapper, createProductCardElement);
 }
 
 [inputMin, inputMax].forEach(input => {
@@ -109,7 +109,7 @@ if (type) {
                 return;
             };
 
-            render(allFilteredProducts, cardsWrapper, createProductCardElemnt);
+            render(allFilteredProducts, cardsWrapper, createProductCardElement);
         })
         .catch(error => {
             console.error("Ошибка при получении данных:", error);
@@ -125,7 +125,7 @@ function filterByColor(selectedColor) {
     cardsWrapper.innerHTML = "";
 
     if (filteredByColor.length > 0) {
-        render(filteredByColor, cardsWrapper, createProductCardElemnt);
+        render(filteredByColor, cardsWrapper, createProductCardElement);
     } else {
         cardsWrapper.innerHTML = "<p>Товары данного цвета не найдены</p>";
     }

@@ -1,4 +1,6 @@
-export function createProductCardElemnt(data) {
+import { getData, postData, patchData } from "./../libs/api";
+
+export function createProductCardElement(data) {
     const productCard = document.createElement('div');
     productCard.classList.add('product-card');
 
@@ -74,37 +76,64 @@ export function createProductCardElemnt(data) {
     likedIcon.src = '/src/images/liked-icon.svg';
     likedIcon.alt = 'like icon';
 
+    const userId = localStorage.getItem("userId");
     let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
 
     const isAlreadyLiked = likedProducts.some(product => product.id === data.id);
     if (isAlreadyLiked) {
         likedIcon.classList.add("active");
-    };
+    }
 
-    likedIcon.onclick = (event) => {
+    likedIcon.onclick = async (event) => {
         event.stopPropagation();
-
+    
         let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
-
         const isLiked = likedProducts.some(product => product.id === data.id);
-
+    
         if (isLiked) {
             likedProducts = likedProducts.filter(product => product.id !== data.id);
             likedIcon.classList.remove("active");
         } else {
-            likedProducts.push(data);
+            likedProducts.push({ ...data, userId });
             likedIcon.classList.add("active");
-        };
-
+        }
+    
         localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
+    
+        if (userId) {
+            try {
+                const favoritesRes = await getData("favorites");
+                let userFavorites = favoritesRes.data.find(fav => String(fav.userId) === userId);
+    
+                if (userFavorites) {
+                    const updatedProducts = isLiked
+                        ? userFavorites.products.filter(p => p.id !== data.id)
+                        : [...userFavorites.products, { id: data.id }];
+    
+                    await patchData(`favorites/${userFavorites.id}`, {
+                        userId,
+                        products: updatedProducts
+                    });
+                } else {
+                    await postData("favorites", {
+                        userId,
+                        products: [{ id: data.id }]
+                    });
+                }
+            } catch (error) {
+                console.error("Ошибка при обновлении избранного:", error);
+            }
+        }
     };
+    
+    
 
     cartIcon.onclick = async (event) => {
         event.stopPropagation();
-    
+
         let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
         const isInCart = cartProducts.some(product => product.id === data.id);
-    
+
         if (!isInCart) {
             cartProducts.push({ ...data, quantity: 1 });
             alert("Товар добавлен в корзину!");
@@ -112,21 +141,21 @@ export function createProductCardElemnt(data) {
             cartProducts = cartProducts.map(product => {
                 if (product.id === data.id) {
                     return { ...product, quantity: product.quantity + 1 };
-                };
+                }
                 return product;
             });
         }
-    
+
         localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
-    
+
         if (userId) {
             try {
                 const cartRes = await getData("cart");
-                const userCart = cartRes.data.find(cart => cart.userId === userId);
-    
+                const userCart = cartRes.data.find(cart => String(cart.userId) === userId);
+
                 if (userCart) {
                     await patchData(`cart/${userCart.id}`, {
-                        ...userCart,
+                        userId,
                         products: cartProducts
                     });
                 } else {
@@ -136,7 +165,7 @@ export function createProductCardElemnt(data) {
                     });
                 }
             } catch (error) {
-                console.error(error);
+                console.error("Ошибка при обновлении корзины:", error);
             }
         }
     };
@@ -151,5 +180,4 @@ export function createProductCardElemnt(data) {
     };
 
     return productCard;
-};
-
+}
