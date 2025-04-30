@@ -7,7 +7,25 @@ import { getData, postData, patchData } from "../../libs/api";
 createCategoriesSection();
 header();
 
-let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+let userId = localStorage.getItem("userId");
+
+let cartProducts = [];
+
+if (userId) {
+    try {
+        const cartRes = await getData("cart");
+        const userCart = cartRes.data.find(cart => String(cart.userId) === userId);
+        cartProducts = userCart?.products || [];
+    } catch (error) {
+        console.error("Ошибка при получении корзины:", error);
+    }
+} else {
+    cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+}
+
+if (!userId) {
+    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+}
 
 const shoppingCartSection = document.querySelector(".shoppingCart-section");
 const activeSection = document.querySelector(".active");
@@ -18,9 +36,6 @@ const totalItems = document.querySelector("#totalItems");
 const totalDiscountEl = document.querySelector("#totalDiscount");
 
 let cartItems = [];
-
-let userId = localStorage.getItem("userId");
-
 let allGoods = [];
 
 async function loadData() {
@@ -28,9 +43,8 @@ async function loadData() {
         const res = await getData('goods/');
         if (res && res.data) {
             allGoods = res.data;
-            console.log("All goods data after loading:", allGoods);
+            console.log("Загружены товары:", allGoods);
             createSearchElement(allGoods);
-
             await loadCartData();
         } else {
             console.error("Нет данных для отображения");
@@ -46,6 +60,7 @@ async function loadCartData() {
             const res = await getData("cart");
             const userCart = res.data.find(c => +c.userId === +userId);
             cartProducts = userCart?.products || [];
+            console.log("Корзина пользователя:", cartProducts);
         } catch (err) {
             console.error("Ошибка загрузки корзины пользователя", err);
         }
@@ -56,7 +71,7 @@ async function loadCartData() {
     renderCartItems();
 }
 
-function renderCartItems() {
+async function renderCartItems() {
     if (cartProducts.length === 0) {
         activeSection.style.display = "block";
         shoppingCartSection.style.display = "none";
@@ -66,27 +81,32 @@ function renderCartItems() {
         shoppingCartSection.style.display = "block";
         shoppingCartContainer.innerHTML = "";
 
-        console.log("Cart products:", cartProducts);
-        console.log("All goods data:", allGoods);
+        const validProducts = [];
 
-        cartProducts.forEach(cartItem => {
-            const cartItemId = cartItem.id;
-            console.log("Cart item ID:", cartItemId);
-
-            const fullProductData = allGoods.find(product => +product.id === +cartItemId);
+        for (const cartItem of cartProducts) {
+            const fullProductData = allGoods.find(product => +product.id === +cartItem.id);
             if (fullProductData) {
-                const productData = {
-                    ...fullProductData,
-                    quantity: cartItem.quantity
-                };
+                const productData = { ...fullProductData, quantity: cartItem.quantity };
                 const item = createCartItemElement(productData, updateSummary, removeProductFromCart);
                 shoppingCartContainer.appendChild(item);
                 cartItems.push(item);
+                validProducts.push(cartItem);
             } else {
-                console.error("Товар с id", cartItemId, "не найден в allGoods");
-                cartProducts = cartProducts.filter(item => item.id !== cartItemId);
+                console.warn(`Товар с ID ${cartItem.id} не найден и будет удалён из корзины`);
             }
-        });
+        }
+
+        cartProducts = validProducts;
+        console.log("Товары в корзине после фильтрации:", cartProducts);
+        if (userId) {
+            const res = await getData("cart");
+            const userCart = res.data.find(c => +c.userId === +userId);
+            if (userCart) {
+                await patchData(`cart/${userCart.id}`, { ...userCart, products: cartProducts });
+            }
+        } else {
+            localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+        }
 
         updateSummary();
     }
@@ -94,17 +114,17 @@ function renderCartItems() {
 
 function removeProductFromCart(productId) {
     cartProducts = cartProducts.filter(p => p.id !== productId);
-
+    console.log("Корзина после удаления товара:", cartProducts);
     if (userId) {
         getData("cart").then(res => {
-            const userCart = res.data.find(c => c.userId === userId);
+            const userCart = res.data.find(c => +c.userId === +userId);
             if (userCart) {
                 patchData(`cart/${userCart.id}`, { ...userCart, products: cartProducts });
             }
         });
+    } else {
+        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
     }
-
-    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
 
     renderCartItems();
 }
@@ -115,15 +135,13 @@ function updateSummary() {
     let discountSum = 0;
 
     cartItems.forEach(item => {
-        console.log(item);
         const price = parseInt(item.dataset.price, 10);
         const salePercentage = item.dataset.salePercentage ? parseInt(item.dataset.salePercentage, 10) : 0;
         const qty = parseInt(item.dataset.quantity, 10);
 
         totalQty += qty;
-
         const itemTotal = price * qty;
-        const discount = salePercentage ? (itemTotal * salePercentage) / 100 : 0;
+        const discount = (itemTotal * salePercentage) / 100;
 
         totalPrice += itemTotal;
         discountSum += discount;
@@ -137,8 +155,6 @@ function updateSummary() {
     totalDiscountEl.textContent = `${new Intl.NumberFormat("ru-RU").format(Math.floor(discountSum))}`;
 }
 
-loadData();
-
 const checkoutButton = document.querySelector(".summary-box button");
 checkoutButton.addEventListener("click", placeOrder);
 
@@ -150,25 +166,25 @@ async function placeOrder() {
 
     try {
         await postData("orders", order);
-
         showOrderConfirmation("Ваш заказ оформлен!");
 
         cartProducts = [];
-        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
-
-        if (userId) {
+        
+        if (!userId) {
+            localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+        } else {
             const res = await getData("cart");
             const userCart = res.data.find(c => +c.userId === +userId);
             if (userCart) {
                 await patchData(`cart/${userCart.id}`, { ...userCart, products: [] });
-            };
-        };
+            }
+        }
 
         renderCartItems();
     } catch (error) {
         console.error("Ошибка при оформлении заказа", error);
-    };
-};
+    }
+}
 
 function showOrderConfirmation(message) {
     let confirmationDiv = document.querySelector(".order-confirmation");
@@ -177,7 +193,7 @@ function showOrderConfirmation(message) {
         confirmationDiv = document.createElement("div");
         confirmationDiv.className = "order-confirmation";
         document.body.appendChild(confirmationDiv);
-    };
+    }
 
     confirmationDiv.textContent = message;
     confirmationDiv.classList.add("show");
@@ -185,4 +201,6 @@ function showOrderConfirmation(message) {
     setTimeout(() => {
         confirmationDiv.classList.remove("show");
     }, 3000);
-};
+}
+
+loadData();
