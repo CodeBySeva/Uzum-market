@@ -82,11 +82,45 @@ export function createProductCardElement(data) {
     likedIcon.alt = 'like icon';
 
     const userId = localStorage.getItem("userId");
-    let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
+    if (userId) {
+        getData("favorites").then((res) => {
+            const userFavorites = res.data.find(fav => String(fav.userId) === userId);
+            const isLiked = userFavorites.products.some(product => product.id === data.id);
 
-    const isAlreadyLiked = likedProducts.some(product => product.id === data.id);
-    if (isAlreadyLiked) {
-        likedIcon.classList.add("active");
+            if (isLiked) {
+                likedIcon.classList.add("active");
+            }
+        });
+
+        getData("cart").then((res) => {
+            const userCart = res.data.find(cart => String(cart.userId) === userId);
+            let cartProducts = userCart?.products || [];
+
+            const isInCart = cartProducts.some(product => product.id === data.id);
+
+            if (isInCart) {
+                cartIcon.src = "/src/images/shopping-cart-added.svg";
+            } else {
+                cartIcon.src = "/src/images/shopping-cart.svg";
+            }
+        });
+    } else {
+        let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
+
+        const isAlreadyLiked = likedProducts.some(product => product.id === data.id);
+        if (isAlreadyLiked) {
+            likedIcon.classList.add("active");
+        }
+
+        let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+        const isInCart = cartProducts.some(product => product.id === data.id);
+
+        if (isInCart) {
+            cartIcon.src = "/src/images/shopping-cart-added.svg";
+        } else {
+            cartIcon.src = "/src/images/shopping-cart.svg";
+        }
+
     }
 
     likedIcon.onclick = async (event) => {
@@ -114,7 +148,7 @@ export function createProductCardElement(data) {
                 await postData("favorites", { userId, products: favProducts });
             }
         } else {
-            let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+            let favorites = JSON.parse(localStorage.getItem("likedProducts")) || [];
             const isLiked = favorites.some(product => product.id === data.id);
 
             if (isLiked) {
@@ -126,7 +160,7 @@ export function createProductCardElement(data) {
                 likedIcon.classList.add("active");
             }
 
-            localStorage.setItem("favorites", JSON.stringify(favorites));
+            localStorage.setItem("likedProducts", JSON.stringify(favorites));
         }
     };
 

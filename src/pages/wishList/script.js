@@ -7,26 +7,43 @@ import { getData } from "../../libs/api";
 createCategoriesSection();
 header();
 
-const userId = localStorage.getItem("userId");
-const allLiked = JSON.parse(localStorage.getItem("likedProducts")) || [];
-const liked = allLiked.filter(product => +product.userId === +userId);
-
 const wishListSection = document.querySelector(".wish-list");
 const activeSection = document.querySelector(".active");
 
-if (liked.length === 0) {
-    activeSection.style.display = "block";
-    wishListSection.style.display = "none";
-} else {
-    activeSection.style.display = "none";
-    wishListSection.style.display = "block";
+const userId = localStorage.getItem("userId");
+if (userId) {
+    const allLiked = await getData('favorites');
+    const liked = allLiked.data.find(product => +product.userId === +userId);
 
-    liked.forEach(product => {
+    if (!liked.products?.length) {
+        activeSection.style.display = "block";
+        wishListSection.style.display = "none";
+    } else {
+        activeSection.style.display = "none";
+        wishListSection.style.display = "block";
+    }  
+
+    liked.products?.forEach(async product => {
+        const data = await getData(`goods/${product.id}`);
+        const card = createProductCardElement(data.data);
+        document.querySelector('.wish-list-container').appendChild(card);
+    });
+} else {
+    const allLiked = JSON.parse(localStorage.getItem("likedProducts")) || [];
+    
+    if (allLiked.length === 0) {
+        activeSection.style.display = "block";
+        wishListSection.style.display = "none";
+    } else {
+        activeSection.style.display = "none";
+        wishListSection.style.display = "block";
+    }    
+
+    allLiked.forEach(product => {
         const card = createProductCardElement(product);
         document.querySelector('.wish-list-container').appendChild(card);
     });
 }
-
 getData("goods/")
     .then((res) => {
         if (res && res.data) {

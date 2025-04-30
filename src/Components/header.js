@@ -87,7 +87,7 @@ export function header() {
         searchOverlay.style.display = "none";
         document.body.classList.remove('no-scroll');
       }
-      
+
       modal.style.display = "flex";
       closeModal.style.display = "flex";
       categoriesOverlay.style.display = "flex";
@@ -142,13 +142,33 @@ export function header() {
     signInBtn.style.cursor = "pointer";
 
     signInBtn.onclick = () => {
-      const confirmed = confirm("Вы уверены, что хотите выйти?");
-      if (confirmed) {
+      const logOutModal = document.createElement('div');
+      logOutModal.classList.add('log-out-modal');
+      logOutModal.innerHTML = `
+        <div class="modal-content">
+          <h3>Вы уверены, что хотите выйти?</h3>
+          <div class="modal-buttons">
+            <button class="cancel-btn">Отмена</button>
+            <button class="confirm-btn">Выйти</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(logOutModal);
+
+      const cancelBtn = logOutModal.querySelector('.cancel-btn');
+      const confirmBtn = logOutModal.querySelector('.confirm-btn');
+
+      cancelBtn.onclick = () => {
+        logOutModal.remove();
+      };
+
+      confirmBtn.onclick = () => {
         localStorage.removeItem('userId');
         localStorage.removeItem('token');
         localStorage.removeItem('userName');
         window.location.replace("/");
-      }
+      };
     };
   } else {
     signInBtn.onclick = () => {

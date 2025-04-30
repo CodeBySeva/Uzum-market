@@ -964,24 +964,8 @@
     {
       "id": "1",
       "userId": "4204",
-      "products": [
-        {
-          "id": "8"
-        },
-        {
-          "id": "2"
-        },
-        {
-          "id": "5"
-        }
-      ]
+      "products": []
     }
   ],
-  "orders": [
-    {
-      "id": "9392",
-      "orderNumber": "1746015580158",
-      "totalAmount": "805 176 сум"
-    }
-  ]
+  "orders": []
 }
