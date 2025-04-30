@@ -125,7 +125,7 @@ export function createSearchElement(products = []) {
                 searchList.appendChild(empty);
             }
 
-        }, 500);
+        }, 1000);
     });
 
     return searchOverlay;

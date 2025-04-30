@@ -1,7 +1,7 @@
 import { createCategoriesSection } from "../../Components/categories";
 import { createSearchElement } from "../../Components/search";
 import { header } from "../../Components/header";
-import { getData } from "../../libs/api";
+import { getData, postData, patchData } from "../../libs/api";
 import { render } from "../../libs/utils";
 import { createProductCardElement } from "../../Components/productCard";
 
@@ -37,9 +37,10 @@ Promise.all([getpoductData, getAllProducts])
 
 const likedBtn = document.querySelector("#likedBtn");
 
-likedBtn.onclick = () => {
+likedBtn.onclick = async () => {
     if (!currentProductData) return;
 
+    const userId = localStorage.getItem("userId");
     let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
 
     const isLiked = likedProducts.some(product => product.id === currentProductData.id);
@@ -48,13 +49,39 @@ likedBtn.onclick = () => {
         likedProducts = likedProducts.filter(product => product.id !== currentProductData.id);
         likedBtn.classList.remove("active");
     } else {
-        likedProducts.push(currentProductData);
+        likedProducts.push({ ...currentProductData, userId });
         likedBtn.classList.add("active");
-    }
+    };
 
     localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
     updateLikedBtnText();
+
+    if (userId) {
+        try {
+            const favoritesRes = await getData("favorites");
+            let userFavorites = favoritesRes.data.find(fav => String(fav.userId) === userId);
+
+            if (userFavorites) {
+                const updatedProducts = isLiked
+                    ? userFavorites.products.filter(p => p.id !== currentProductData.id)
+                    : [...userFavorites.products, { id: currentProductData.id }];
+
+                await patchData(`favorites/${userFavorites.id}`, {
+                    userId,
+                    products: updatedProducts
+                });
+            } else {
+                await postData("favorites", {
+                    userId,
+                    products: [{ id: currentProductData.id }]
+                });
+            }
+        } catch (error) {
+            console.error("Ошибка при обновлении избранного:", error);
+        };
+    };
 };
+
 
 function updateLikedBtnText() {
     const likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
@@ -62,12 +89,13 @@ function updateLikedBtnText() {
 
     likedBtn.textContent = isLiked ? "В избранном" : "Добавить в избранное";
     likedBtn.classList.toggle("active", isLiked);
-}
+};
 
 window.onload = () => {
     updateLikedBtnText();
 };
 
+const quantityDisplay = document.querySelector("#quantity");
 
 function productElements(data) {
     const title = document.querySelector("#product_title");
@@ -110,7 +138,7 @@ function productElements(data) {
 
             if (index === 0) {
                 thumbDiv.classList.add("img-active");
-            }
+            };
 
             img.onclick = () => {
                 mainSlider.src = src;
@@ -128,7 +156,7 @@ function productElements(data) {
         });
     } else {
         mainSlider.src = "";
-    }
+    };
 
     const cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
     const inCart = cartProducts.some(product => product.id === data.id);
@@ -138,21 +166,20 @@ function productElements(data) {
         addToCartBtn.textContent = "В корзине";
     } else {
         addToCartBtn.textContent = "Добавить в корзину";
-    }
+    };
 
     const existingProduct = cartProducts.find(product => product.id === data.id);
     if (existingProduct) {
         quantity = existingProduct.quantity || 1;
     } else {
         quantity = 1;
-    }
+    };
     quantityDisplay.textContent = quantity;
 
     updateLikedBtnText();
-}
+};
 
 
-const quantityDisplay = document.querySelector("#quantity");
 const incrementBtn = document.querySelector("#increment");
 const decrementBtn = document.querySelector("#decrement");
 
@@ -173,14 +200,13 @@ decrementBtn.onclick = () => {
 
 const addToCartBtn = document.querySelector(".btn.primary");
 
-addToCartBtn.onclick = () => {
+addToCartBtn.onclick = async () => {
     if (!currentProductData) return;
 
     let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+    const isInCart = cartProducts.some(product => product.id === currentProductData.id);
 
-    const existingProduct = cartProducts.find(product => product.id === currentProductData.id);
-
-    if (existingProduct) {
+    if (isInCart) {
         cartProducts = cartProducts.filter(product => product.id !== currentProductData.id);
         addToCartBtn.textContent = "Добавить в корзину";
         quantity = 1;
@@ -191,7 +217,31 @@ addToCartBtn.onclick = () => {
     }
 
     localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+
+    const userId = localStorage.getItem("userId");
+
+    if (userId) {
+        try {
+            const res = await getData("cart");
+            const userCart = res.data.find(cart => String(cart.userId) === userId);
+
+            if (userCart) {
+                await patchData(`cart/${userCart.id}`, {
+                    userId,
+                    products: cartProducts
+                });
+            } else {
+                await postData("cart", {
+                    userId,
+                    products: cartProducts
+                });
+            }
+        } catch (err) {
+            console.error("Ошибка при синхронизации корзины:", err);
+        };
+    };
 };
+
 
 
 const titleText = document.querySelector(".title-text h2");

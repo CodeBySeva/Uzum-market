@@ -17,7 +17,7 @@ const totalAmount = document.querySelector("#total-amount");
 const totalItems = document.querySelector("#totalItems");
 const totalDiscountEl = document.querySelector("#totalDiscount");
 
-const cartItems = [];
+let cartItems = [];
 
 let userId = localStorage.getItem("userId");
 
@@ -27,7 +27,7 @@ async function loadData() {
     try {
         const res = await getData('goods/');
         if (res && res.data) {
-            allGoods = res.data; 
+            allGoods = res.data;
             console.log("All goods data after loading:", allGoods);
             createSearchElement(allGoods);
 
@@ -61,9 +61,9 @@ function renderCartItems() {
         activeSection.style.display = "block";
         shoppingCartSection.style.display = "none";
     } else {
+        cartItems = [];
         activeSection.style.display = "none";
         shoppingCartSection.style.display = "block";
-
         shoppingCartContainer.innerHTML = "";
 
         console.log("Cart products:", cartProducts);
@@ -71,7 +71,7 @@ function renderCartItems() {
 
         cartProducts.forEach(cartItem => {
             const cartItemId = cartItem.id;
-            console.log("Cart item ID:", cartItemId); 
+            console.log("Cart item ID:", cartItemId);
 
             const fullProductData = allGoods.find(product => +product.id === +cartItemId);
             if (fullProductData) {
@@ -102,9 +102,9 @@ function removeProductFromCart(productId) {
                 patchData(`cart/${userCart.id}`, { ...userCart, products: cartProducts });
             }
         });
-    } else {
-        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
     }
+
+    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
 
     renderCartItems();
 }
@@ -115,6 +115,7 @@ function updateSummary() {
     let discountSum = 0;
 
     cartItems.forEach(item => {
+        console.log(item);
         const price = parseInt(item.dataset.price, 10);
         const salePercentage = item.dataset.salePercentage ? parseInt(item.dataset.salePercentage, 10) : 0;
         const qty = parseInt(item.dataset.quantity, 10);
@@ -130,10 +131,58 @@ function updateSummary() {
 
     const finalPrice = totalPrice - discountSum;
     const roundedPrice = Math.round(finalPrice * 100) / 100;
-                                                                                                                                                                           
+
     totalAmount.textContent = `${new Intl.NumberFormat("ru-RU").format(Math.floor(roundedPrice))} сум`;
     totalItems.textContent = totalQty;
     totalDiscountEl.textContent = `${new Intl.NumberFormat("ru-RU").format(Math.floor(discountSum))}`;
 }
 
 loadData();
+
+const checkoutButton = document.querySelector(".summary-box button");
+checkoutButton.addEventListener("click", placeOrder);
+
+async function placeOrder() {
+    const order = {
+        orderNumber: Date.now().toString(),
+        totalAmount: totalAmount.textContent
+    };
+
+    try {
+        await postData("orders", order);
+
+        showOrderConfirmation("Ваш заказ оформлен!");
+
+        cartProducts = [];
+        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+
+        if (userId) {
+            const res = await getData("cart");
+            const userCart = res.data.find(c => +c.userId === +userId);
+            if (userCart) {
+                await patchData(`cart/${userCart.id}`, { ...userCart, products: [] });
+            };
+        };
+
+        renderCartItems();
+    } catch (error) {
+        console.error("Ошибка при оформлении заказа", error);
+    };
+};
+
+function showOrderConfirmation(message) {
+    let confirmationDiv = document.querySelector(".order-confirmation");
+
+    if (!confirmationDiv) {
+        confirmationDiv = document.createElement("div");
+        confirmationDiv.className = "order-confirmation";
+        document.body.appendChild(confirmationDiv);
+    };
+
+    confirmationDiv.textContent = message;
+    confirmationDiv.classList.add("show");
+
+    setTimeout(() => {
+        confirmationDiv.classList.remove("show");
+    }, 3000);
+};

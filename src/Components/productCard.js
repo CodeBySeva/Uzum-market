@@ -63,6 +63,11 @@ export function createProductCardElement(data) {
     cartIcon.src = '/src/images/shopping-cart.svg';
     cartIcon.alt = 'shopping-cart';
 
+    const cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+    const inCart = cartProducts.some(product => product.id === data.id);
+    cartIcon.src = inCart ? "/src/images/shopping-cart-added.svg" : "/src/images/shopping-cart.svg";
+
+
     button.appendChild(cartIcon);
 
     cardWrapper.appendChild(productPrice);
@@ -86,10 +91,10 @@ export function createProductCardElement(data) {
 
     likedIcon.onclick = async (event) => {
         event.stopPropagation();
-    
+
         let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
         const isLiked = likedProducts.some(product => product.id === data.id);
-    
+
         if (isLiked) {
             likedProducts = likedProducts.filter(product => product.id !== data.id);
             likedIcon.classList.remove("active");
@@ -97,19 +102,19 @@ export function createProductCardElement(data) {
             likedProducts.push({ ...data, userId });
             likedIcon.classList.add("active");
         }
-    
+
         localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
-    
+
         if (userId) {
             try {
                 const favoritesRes = await getData("favorites");
                 let userFavorites = favoritesRes.data.find(fav => String(fav.userId) === userId);
-    
+
                 if (userFavorites) {
                     const updatedProducts = isLiked
                         ? userFavorites.products.filter(p => p.id !== data.id)
                         : [...userFavorites.products, { id: data.id }];
-    
+
                     await patchData(`favorites/${userFavorites.id}`, {
                         userId,
                         products: updatedProducts
@@ -125,26 +130,24 @@ export function createProductCardElement(data) {
             }
         }
     };
-    
-    
 
     cartIcon.onclick = async (event) => {
         event.stopPropagation();
 
         let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+
         const isInCart = cartProducts.some(product => product.id === data.id);
 
-        if (!isInCart) {
-            cartProducts.push({ ...data, quantity: 1 });
-            alert("Товар добавлен в корзину!");
+        if (isInCart) {
+            cartProducts = cartProducts.filter(product => product.id !== data.id);
+            cartIcon.src = "/src/images/shopping-cart.svg";
+            showRemoveFromCartNotification(data);
         } else {
-            cartProducts = cartProducts.map(product => {
-                if (product.id === data.id) {
-                    return { ...product, quantity: product.quantity + 1 };
-                }
-                return product;
-            });
-        }
+            cartProducts.push({ ...data, quantity: 1 });
+            cartIcon.src = "/src/images/shopping-cart-added.svg";
+            
+            showAddToCartNotification(data);
+        };
 
         localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
 
@@ -180,4 +183,69 @@ export function createProductCardElement(data) {
     };
 
     return productCard;
+};
+
+function showAddToCartNotification(product) {
+    const notification = document.createElement('div');
+    notification.classList.add('cart-notification');
+
+    const img = document.createElement('img');
+    img.src = product.media[0];
+    img.alt = product.title;
+
+    const info = document.createElement('div');
+    info.classList.add('cart-notification-info');
+
+    const title = document.createElement('div');
+    title.classList.add('cart-notification-title');
+    title.textContent = 'Товар добавлен в корзину';
+
+    const description = document.createElement('div');
+    description.classList.add('cart-notification-desc');
+    description.textContent = `${product.title}`;
+
+    const link = document.createElement('a');
+    link.href = '/src/pages/shoppingСart/';
+    link.classList.add('cart-notification-link');
+    link.textContent = 'ПЕРЕЙТИ В КОРЗИНУ';
+
+    info.appendChild(title);
+    info.appendChild(description);
+    info.appendChild(link);
+
+    notification.appendChild(img);
+    notification.appendChild(info);
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
+};
+
+function showRemoveFromCartNotification(product) {
+    const notification = document.createElement('div');
+    notification.classList.add('cart-notification', 'remove-notification');
+
+    const info = document.createElement('div');
+    info.classList.add('notification-info');
+
+    const title = document.createElement('div');
+    title.classList.add('notification-title');
+    title.textContent = 'Товар удалён из корзины!';
+
+    const description = document.createElement('div');
+    description.classList.add('notification-desc');
+    description.textContent = `${product.title}`;
+
+    info.appendChild(title);
+    info.appendChild(description);
+
+    notification.appendChild(info);
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
 }
