@@ -7,36 +7,36 @@ import { getData, postData, patchData } from "../../libs/api";
 createCategoriesSection();
 header();
 
-let userId = localStorage.getItem("userId");
-
+let userId = null;
 let cartProducts = [];
-
-if (userId) {
-    try {
-        const cartRes = await getData("cart");
-        const userCart = cartRes.data.find(cart => String(cart.userId) === userId);
-        cartProducts = userCart?.products || [];
-    } catch (error) {
-        console.error("Ошибка при получении корзины:", error);
-    }
-} else {
-    cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
-}
-
-if (!userId) {
-    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
-}
+let cartItems = [];
+let allGoods = [];
 
 const shoppingCartSection = document.querySelector(".shoppingCart-section");
 const activeSection = document.querySelector(".active");
 const shoppingCartContainer = document.querySelector('.shoppingCart .main-box');
-
 const totalAmount = document.querySelector("#total-amount");
 const totalItems = document.querySelector("#totalItems");
 const totalDiscountEl = document.querySelector("#totalDiscount");
 
-let cartItems = [];
-let allGoods = [];
+async function initCart() {
+    userId = localStorage.getItem("userId");
+
+    if (userId) {
+        try {
+            const cartRes = await getData("cart");
+            const userCart = cartRes.data.find(cart => String(cart.userId) === userId);
+            cartProducts = userCart?.products || [];
+        } catch (error) {
+            console.error("Ошибка при получении корзины:", error);
+        }
+    } else {
+        cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+    }
+
+    await loadData();
+}
 
 async function loadData() {
     try {
@@ -72,6 +72,17 @@ async function loadCartData() {
 }
 
 async function renderCartItems() {
+    const userId = localStorage.getItem("userId");
+    let cartProducts = [];
+
+    if (userId) {
+        const res = await getData("cart");
+        const userCart = res.data.find(item => String(item.userId) === userId);
+        cartProducts = userCart?.products || [];
+    } else {
+        cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+    }
+
     if (cartProducts.length === 0) {
         activeSection.style.display = "block";
         shoppingCartSection.style.display = "none";
@@ -97,7 +108,7 @@ async function renderCartItems() {
         }
 
         cartProducts = validProducts;
-        console.log("Товары в корзине после фильтрации:", cartProducts);
+
         if (userId) {
             const res = await getData("cart");
             const userCart = res.data.find(c => +c.userId === +userId);
@@ -112,17 +123,19 @@ async function renderCartItems() {
     }
 }
 
-function removeProductFromCart(productId) {
-    cartProducts = cartProducts.filter(p => p.id !== productId);
-    console.log("Корзина после удаления товара:", cartProducts);
+async function removeProductFromCart(productId) {
+    const userId = localStorage.getItem("userId");
+
     if (userId) {
-        getData("cart").then(res => {
-            const userCart = res.data.find(c => +c.userId === +userId);
-            if (userCart) {
-                patchData(`cart/${userCart.id}`, { ...userCart, products: cartProducts });
-            }
-        });
+        const res = await getData("cart");
+        const userCart = res.data.find(cart => String(cart.userId) === userId);
+        if (!userCart) return;
+
+        const updatedProducts = userCart.products.filter(product => product.id !== productId);
+        await patchData(`cart/${userCart.id}`, { userId, products: updatedProducts });
     } else {
+        let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+        cartProducts = cartProducts.filter(product => product.id !== productId);
         localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
     }
 
@@ -159,6 +172,8 @@ const checkoutButton = document.querySelector(".summary-box button");
 checkoutButton.addEventListener("click", placeOrder);
 
 async function placeOrder() {
+    const userId = localStorage.getItem("userId");
+
     const order = {
         orderNumber: Date.now().toString(),
         totalAmount: totalAmount.textContent
@@ -169,7 +184,7 @@ async function placeOrder() {
         showOrderConfirmation("Ваш заказ оформлен!");
 
         cartProducts = [];
-        
+
         if (!userId) {
             localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
         } else {
@@ -185,7 +200,6 @@ async function placeOrder() {
         console.error("Ошибка при оформлении заказа", error);
     }
 }
-
 function showOrderConfirmation(message) {
     let confirmationDiv = document.querySelector(".order-confirmation");
 
@@ -203,4 +217,4 @@ function showOrderConfirmation(message) {
     }, 3000);
 }
 
-loadData();
+initCart();

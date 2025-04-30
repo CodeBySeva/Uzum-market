@@ -91,70 +91,66 @@ export function createProductCardElement(data) {
 
     likedIcon.onclick = async (event) => {
         event.stopPropagation();
-
-        let likedProducts = JSON.parse(localStorage.getItem("likedProducts")) || [];
-        const isLiked = likedProducts.some(product => product.id === data.id);
-
-        if (isLiked) {
-            likedProducts = likedProducts.filter(product => product.id !== data.id);
-            likedIcon.classList.remove("active");
-        } else {
-            likedProducts.push({ ...data, userId });
-            likedIcon.classList.add("active");
-        }
-
-        localStorage.setItem("likedProducts", JSON.stringify(likedProducts));
+        const userId = localStorage.getItem("userId");
 
         if (userId) {
-            try {
-                const favoritesRes = await getData("favorites");
-                let userFavorites = favoritesRes.data.find(fav => String(fav.userId) === userId);
+            const favoritesRes = await getData("favorites");
+            const userFavorites = favoritesRes.data.find(fav => String(fav.userId) === userId);
+            let favProducts = userFavorites?.products || [];
 
-                if (userFavorites) {
-                    const updatedProducts = isLiked
-                        ? userFavorites.products.filter(p => p.id !== data.id)
-                        : [...userFavorites.products, { id: data.id }];
+            const isLiked = favProducts.some(product => product.id === data.id);
 
-                    await patchData(`favorites/${userFavorites.id}`, {
-                        userId,
-                        products: updatedProducts
-                    });
-                } else {
-                    await postData("favorites", {
-                        userId,
-                        products: [{ id: data.id }]
-                    });
-                }
-            } catch (error) {
-                console.error("Ошибка при обновлении избранного:", error);
+            if (isLiked) {
+                favProducts = favProducts.filter(product => product.id !== data.id);
+                likedIcon.classList.remove("active");
+            } else {
+                favProducts.push({ id: data.id });
+                likedIcon.classList.add("active");
             }
+
+            if (userFavorites) {
+                await patchData(`favorites/${userFavorites.id}`, { userId, products: favProducts });
+            } else {
+                await postData("favorites", { userId, products: favProducts });
+            }
+        } else {
+            let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+            const isLiked = favorites.some(product => product.id === data.id);
+
+            if (isLiked) {
+                favorites = favorites.filter(product => product.id !== data.id);
+                likedIcon.classList.remove("active");
+
+            } else {
+                favorites.push(data);
+                likedIcon.classList.add("active");
+            }
+
+            localStorage.setItem("favorites", JSON.stringify(favorites));
         }
     };
 
     cartIcon.onclick = async (event) => {
         event.stopPropagation();
-
-        let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
-
-        const isInCart = cartProducts.some(product => product.id === data.id);
-
-        if (isInCart) {
-            cartProducts = cartProducts.filter(product => product.id !== data.id);
-            cartIcon.src = "/src/images/shopping-cart.svg";
-            showRemoveFromCartNotification(data);
-        } else {
-            cartProducts.push({ ...data, quantity: 1 });
-            cartIcon.src = "/src/images/shopping-cart-added.svg";
-            
-            showAddToCartNotification(data);
-        };
-
-        localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+        const userId = localStorage.getItem("userId");
 
         if (userId) {
             try {
                 const cartRes = await getData("cart");
                 const userCart = cartRes.data.find(cart => String(cart.userId) === userId);
+                let cartProducts = userCart?.products || [];
+
+                const isInCart = cartProducts.some(product => product.id === data.id);
+
+                if (isInCart) {
+                    cartProducts = cartProducts.filter(product => product.id !== data.id);
+                    cartIcon.src = "/src/images/shopping-cart.svg";
+                    showRemoveFromCartNotification(data);
+                } else {
+                    cartProducts.push({ id: data.id, quantity: 1 });
+                    cartIcon.src = "/src/images/shopping-cart-added.svg";
+                    showAddToCartNotification(data);
+                }
 
                 if (userCart) {
                     await patchData(`cart/${userCart.id}`, {
@@ -170,6 +166,21 @@ export function createProductCardElement(data) {
             } catch (error) {
                 console.error("Ошибка при обновлении корзины:", error);
             }
+        } else {
+            let cartProducts = JSON.parse(localStorage.getItem("cartProducts")) || [];
+            const isInCart = cartProducts.some(product => product.id === data.id);
+
+            if (isInCart) {
+                cartProducts = cartProducts.filter(product => product.id !== data.id);
+                cartIcon.src = "/src/images/shopping-cart.svg";
+                showRemoveFromCartNotification(data);
+            } else {
+                cartProducts.push({ ...data, quantity: 1 });
+                cartIcon.src = "/src/images/shopping-cart-added.svg";
+                showAddToCartNotification(data);
+            }
+
+            localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
         }
     };
 
